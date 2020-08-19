@@ -27,11 +27,22 @@ public class Snake extends Observable implements Runnable {
     private int growing = 0;
     public boolean goal = false;
 
+    private boolean gamePaused = false;
+
     public Snake(int idt, Cell head, int direction) {
         this.idt = idt;
         this.direction = direction;
         generateSnake(head);
 
+    }
+
+    public void pause(){
+        gamePaused = true;
+    }
+
+    public synchronized void resume(){
+        gamePaused = false;
+        notify();
     }
 
     public boolean isSnakeEnd() {
@@ -48,6 +59,15 @@ public class Snake extends Observable implements Runnable {
     @Override
     public void run() {
         while (!snakeEnd) {
+            while (gamePaused){
+                synchronized (this){
+                    try{
+                        wait();
+                    }catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
+                }
+            }
             
             snakeCalc();
 
@@ -56,10 +76,10 @@ public class Snake extends Observable implements Runnable {
             notifyObservers();
 
             try {
-                if (hasTurbo == true) {
-                    Thread.sleep(500 / 3);
+                if (hasTurbo) {
+                    Thread.sleep(5/ 3);
                 } else {
-                    Thread.sleep(500);
+                    Thread.sleep(5);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -73,7 +93,9 @@ public class Snake extends Observable implements Runnable {
     }
 
     private void snakeCalc() {
-        head = snakeBody.peekFirst();
+        synchronized (snakeBody){
+            head = snakeBody.peekFirst();
+        }
 
         newCell = head;
 
@@ -85,12 +107,15 @@ public class Snake extends Observable implements Runnable {
         checkIfJumpPad(newCell);
         checkIfTurboBoost(newCell);
         checkIfBarrier(newCell);
-        
-        snakeBody.push(newCell);
+        synchronized (snakeBody){
+            snakeBody.push(newCell);
+        }
 
         if (growing <= 0) {
-            newCell = snakeBody.peekLast();
-            snakeBody.remove(snakeBody.peekLast());
+            synchronized (snakeBody){
+                newCell = snakeBody.peekLast();
+                snakeBody.remove(snakeBody.peekLast());
+            }
             Board.gameboard[newCell.getX()][newCell.getY()].freeCell();
         } else if (growing != 0) {
             growing--;
@@ -329,6 +354,10 @@ public class Snake extends Observable implements Runnable {
 
     public LinkedList<Cell> getBody() {
         return this.snakeBody;
+    }
+
+    public int size(){
+        return snakeBody.size();
     }
 
     public boolean isSelected() {
