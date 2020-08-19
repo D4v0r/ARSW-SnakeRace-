@@ -1,0 +1,17 @@
+2. Accordingly, and using the game logic, identify and write clearly (ANSWERS.txt file)
+   1. Possible race conditions
+        * El hilo que se encarga de pintar ocupa el cuerpo de la serpiente, y las serpientes también lo ocupan para actualizarse, por lo tanto el cuerpo de la serpiente es un recurso sobre el cuál debemos sincronizar su uso.
+   2. An incorrect or inappropriate use of collections, considering its concurrent handling(For this increase the game speed and execute it multiples times until an error has been raised).
+        * En la clase Board donde se dibuja la serpiente, se itera sobre el cuerpo de la serpiente, sin garantizar que la colección no esté mutando en ese momento.
+        * En el metodo snakeCalc se realizan varias operaciones de lectura y modificacion de la coleccion que conforma el cuerpo de la serpiente, sin garantizar su exclusividad.
+        
+   3. Unnecessary use of active waits
+        * Los Thread.sleep() que se usan para ajustar la velocidad del juego, no estan esperando por alguna notificación, por ende parece no tener pausas activas innecesarias.
+        
+3. Identify critical regions associated with race conditions, and do something in order to eliminate them.Note that you have to synchronize strictly needed. In the answers document suggest the solution proposed for each item of the point 2.
+    1. Para solucionar este problema se buscaron los usos del objeto (el cuerpo de la serpiente) y se garantizo la sincronización en los puntos donde se accede a el.
+    2. En la clase board se estableció un bloqueo en el método drawSnake justo antes de que se inicié la iteración sobre la colección.
+    3. En caso de encontrar una pausa activa innecesaria o que afectara el performance, debería optar por usar notify() y wait().
+    
+        
+        
